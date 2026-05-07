@@ -1,15 +1,10 @@
-# bow, countvectorizer, size of matrix, size of dict, density
-# tf-idf, tfidvectorizer, show as df
-# dla kazdego dokumentu top 3 najwazniejsze cechy
-# globalny ranking termow, cos tam jeszcze
-# macierz cosine similarity, heatmapa, pytanie
-# cos tam
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+
+# Zadania A
 
 recenzje_ksiazek = [
     # FANTASY
@@ -31,26 +26,18 @@ recenzje_ksiazek = [
 
 kategorie_ksiazek = ["Fantasy"]*6 + ["Kryminal"]*6
 
-print(f"Korpus: {len(recenzje_ksiazek)} dokumentow")
+print(f"\nKorpus: {len(recenzje_ksiazek)} dokumentow")
 for i, r in enumerate(recenzje_ksiazek):
     print(f"  D{i:2d} [{kategorie_ksiazek[i]:>9s}]: {r}")
-     
+
 count_vec = CountVectorizer()
 X_bow = count_vec.fit_transform(recenzje_ksiazek)
 slownik = count_vec.get_feature_names_out()
 
-print(f"Rozmiar macierzy: {X_bow.shape}  (dokumenty x termy)")
+print(f"\nRozmiar macierzy BoW: {X_bow.shape}  (dokumenty x termy)")
 print(f"Rozmiar slownika: {len(slownik)} unikalnych termow")
 print(f"Niezerowych wpisow: {X_bow.nnz} / {X_bow.shape[0]*X_bow.shape[1]}  "
       f"({X_bow.nnz / (X_bow.shape[0]*X_bow.shape[1]):.1%} gestosci)")
-
-df_bow = pd.DataFrame(
-    X_bow.toarray(),
-    columns=slownik,
-    index=[f"D{i}" for i in range(len(recenzje_ksiazek))]
-)
-print("\nMacierz Bag-of-Words:")
-print(df_bow)
 
 tfidf_vec = TfidfVectorizer()
 X_tfidf = tfidf_vec.fit_transform(recenzje_ksiazek)
@@ -60,11 +47,11 @@ df_tfidf = pd.DataFrame(
     columns=tfidf_vec.get_feature_names_out(),
     index=[f"D{i}" for i in range(len(recenzje_ksiazek))]
 )
-print("Macierz TF-IDF:")
+print("\nMacierz TF-IDF:")
 print(df_tfidf.T)
 
 N = 3
-print(f"TOP-{N} NAJWAZNIEJSZE CECHY W KAZDYM DOKUMENCIE (wg TF-IDF)")
+print(f"\nTOP-{N} NAJWAZNIEJSZE CECHY W KAZDYM DOKUMENCIE (wg TF-IDF)")
 print("=" * 70)
 
 for i, og in enumerate(recenzje_ksiazek):
@@ -86,22 +73,8 @@ df_stats = pd.DataFrame({
     "sr_tfidf":      srednia_tfidf.round(4),
 }).sort_values("sr_tfidf", ascending=False).reset_index(drop=True)
 
-print("RANKING TERMOW (wg sredniego TF-IDF):")
+print("\nRANKING TERMOW (wg sredniego TF-IDF):")
 print(df_stats.to_string(index=False))
-
-dok_id = 0
-print(f'Dokument D{dok_id}: "{recenzje_ksiazek[dok_id]}"\n')
-
-df_porownanie = pd.DataFrame({
-    "term":   slownik,
-    "BoW":    X_bow[dok_id].toarray().flatten(),
-    "TF-IDF": X_tfidf[dok_id].toarray().flatten().round(3),
-})
-df_porownanie = df_porownanie[df_porownanie["BoW"] > 0].sort_values(
-    "TF-IDF", ascending=False
-)
-print("Porownanie wag BoW vs TF-IDF:")
-print(df_porownanie.to_string(index=False))
 
 cos_sim = cosine_similarity(X_tfidf)
 
@@ -110,8 +83,6 @@ df_sim = pd.DataFrame(
     columns=[f"D{i}" for i in range(len(recenzje_ksiazek))],
     index=[f"D{i}" for i in range(len(recenzje_ksiazek))]
 )
-print("Macierz podobienstwa cosinusowego:")
-print(df_sim)
 
 fig, ax = plt.subplots(figsize=(8, 6))
 im = ax.imshow(cos_sim, cmap="YlOrRd", vmin=0, vmax=1)
@@ -137,7 +108,7 @@ konfig = [
     {"ngram_range": (1,3), "max_features": None, "min_df": 1},
 ]
 
-print(f"{'n-gram':>10} | {'max_feat':>10} | {'min_df':>6} | {'Cech':>8} | {'Rzadkosc':>10}")
+print(f"\n{'n-gram':>10} | {'max_feat':>10} | {'min_df':>6} | {'Cech':>8} | {'Rzadkosc':>10}")
 print("-" * 60)
 
 for cfg in konfig:
@@ -146,3 +117,88 @@ for cfg in konfig:
     sparsity = 1 - X.nnz / (X.shape[0] * X.shape[1])
     print(f"{str(cfg['ngram_range']):>10} | {str(cfg['max_features']):>10} | "
           f"{cfg['min_df']:>6} | {X.shape[1]:>8} | {sparsity:>10.4f}")
+
+# Zadania B
+
+posty = [
+    # SPORT (0-4)
+    "Trening interwalowy to najlepszy sposob na poprawe kondycji biegowej",
+    "Reprezentacja zdobyla zloty medal na mistrzostwach swiata w siatkowce",
+    "Nowy rekord swiata w maratonie pobity o trzy sekundy",
+    "Trener oglosil powolania na zgrupowanie kadry przed meczem",
+    "Dieta i regeneracja sa rownie wazne jak sam trening sportowy",
+
+    # TECHNOLOGIA (5-9)
+    "Premiera nowego smartfona z aparatem o rozdzielczosci stu megapikseli",
+    "Sztuczna inteligencja zmienia sposob w jaki pracujemy i uczymy sie",
+    "Aktualizacja systemu operacyjnego przynosi nowe funkcje bezpieczenstwa",
+    "Robot wykorzystujacy sztuczna inteligencje pomaga w diagnostyce medycznej",
+    "Nowy laptop z procesorem najnowszej generacji i ekranem OLED",
+
+    # KUCHNIA (10-14)
+    "Domowy chleb na zakwasie wymaga cierpliwosci ale smakuje wysmienicie",
+    "Przepis na szarlotke z kruszonka i cynamonem na jesienne wieczory",
+    "Kuchnia azjatycka laczy ostre przyprawy z delikatnymi sosami",
+    "Pieczony kurczak z ziolami prowansalskimi i pieczonymi warzywami",
+    "Sezon na grzyby to idealny czas na domowy krem z borowikow",
+]
+
+kategorie_postow = ["Sport"]*5 + ["Tech"]*5 + ["Kuchnia"]*5
+
+print(f"\nKorpus: {len(posty)} dokumentow")
+for i, p in enumerate(posty):
+    print(f"  D{i:2d} [{kategorie_postow[i]:>7s}]: {p}")
+
+p_tfidf_vec = TfidfVectorizer(ngram_range=(1, 1))
+p_X_tfidf = p_tfidf_vec.fit_transform(posty)
+p_slownik = p_tfidf_vec.get_feature_names_out()
+
+p2_tfidf_vec = TfidfVectorizer(ngram_range=(1, 2))
+p2_X_tfidf = p2_tfidf_vec.fit_transform(posty)
+p2_slownik = p2_tfidf_vec.get_feature_names_out()
+
+p2_df_tfidf = pd.DataFrame(
+    p2_X_tfidf.toarray().round(3),
+    columns=p2_tfidf_vec.get_feature_names_out(),
+    index=[f"D{i}" for i in range(len(posty))]
+)
+print("\nMacierz TF-IDF z bigramami:")
+print(p2_df_tfidf.T)
+
+print(f"\nWymiary TF-IDF z bigramami: {p2_X_tfidf.shape}")
+print(f"Wymiary TF-IDF z unigramami: {p_X_tfidf.shape}")
+
+N = 5
+print(f"\nTOP-{N} NAJWAZNIEJSZYCH CECH W KAZDYM DOKUMENCIE (wg TF-IDF) - UNIGRAMY")
+print("=" * 70)
+
+for i, og in enumerate(posty):
+    wiersz = p_X_tfidf[i].toarray().flatten()
+    top_idx = wiersz.argsort()[::-1][:N]
+    cechy = [(p_slownik[j], round(wiersz[j], 3)) for j in top_idx]
+    print(f"\nD{i} [{kategorie_postow[i]:>11s}]: {og[:55]}...")
+    for nazwa, waga in cechy:
+        print(f"       {waga:.3f}  <<{nazwa}>>")
+
+print(f"\nTOP-{N} NAJWAZNIEJSZYCH CECH W KAZDYM DOKUMENCIE (wg TF-IDF) - BIGRAMY")
+print("=" * 70)
+
+for i, og in enumerate(posty):
+    wiersz = p2_X_tfidf[i].toarray().flatten()
+    top_idx = wiersz.argsort()[::-1][:N]
+    cechy = [(p2_slownik[j], round(wiersz[j], 3)) for j in top_idx]
+    print(f"\nD{i} [{kategorie_postow[i]:>11s}]: {og[:55]}...")
+    for nazwa, waga in cechy:
+        print(f"       {waga:.3f}  <<{nazwa}>>")
+
+def znajdz_podobne(query, n=3):
+    q_vec = p2_tfidf_vec.transform([query])
+    sim = cosine_similarity(q_vec, p2_X_tfidf).flatten()
+    top_idx = sim.argsort()[::-1][:n]
+    return [posty[i] for i in top_idx]
+
+zapytania = ["trening silowy i odzywanie sportowcow", "nowy smartfon z aparatem i sztuczna inteligencja", "przepis na domowe ciasto drozdzowe"]
+for i in zapytania:
+    print(f"\nDla zapytania \"{i}\":")
+    for j in znajdz_podobne(i):
+        print(j)

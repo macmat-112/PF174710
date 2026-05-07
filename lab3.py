@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import re
 from collections import Counter
 import random
-
 import nltk
 nltk.download('punkt_tab', quiet=True)
 from nltk.tokenize import word_tokenize
@@ -19,8 +18,8 @@ url = "https://raw.githubusercontent.com/bieli/stopwords/master/polish.stopwords
 response = urllib.request.urlopen(url)
 stop_pl = set(response.read().decode("utf-8").splitlines())
 
-print("Wszystko gotowe!")
-print(f"Załadowano {len(stop_pl)} polskich stop words.")
+print("\nWszystko gotowe!")
+print(f"Załadowano {len(stop_pl)} polskich stop words.\n")
 
 # 1. Ładowanie danych
 
@@ -28,7 +27,9 @@ print(f"Załadowano {len(stop_pl)} polskich stop words.")
 df = pd.read_csv("recenzje_filmowe.csv")
 
 # Wyświetl podstawowe informacje o zbiorze:
-print(df.shape, df.columns, df.dtypes, df.head(), df["text"].head(3))
+print(f"Rozmiar: {df.shape}\nKolumny: {df.columns}\nTypy danych:\n{df.dtypes}\nKilka pierwszych rzędów:")
+print(f"{df.head()}\nKilka pierwszych tekstów:")
+print(df["text"].head(3))
 
 # 2. Tokenizacja i podstawowe statystyki korpusu
 
@@ -37,16 +38,16 @@ df["tokens"] = df["text"].apply(lambda x: word_tokenize(x, language="polish"))
 df["n_tokens"] = df["tokens"].apply(len)
 
 # Wyświetl statystyki:
-print(df["text"].count())
-print(df["n_tokens"].sum())
+print(f"\nLiczba dokumentów: {df["text"].count()}")
+print(f"Łączna liczba tokenów: {df["n_tokens"].sum()}")
 unique = set()
 for l in df["tokens"]:
     unique.update(l)
-print(len(unique))
-print(df["n_tokens"].mean())
-print(df["n_tokens"].median())
-print(df["n_tokens"].min())
-print(df["n_tokens"].max())
+print(f"Liczba unikalnych tokenów: {len(unique)}")
+print(f"Średnia długość dokumentu: {df["n_tokens"].mean()}")
+print(f"Mediana długości: {df["n_tokens"].median()}")
+print(f"Minimalna długość: {df["n_tokens"].min()}")
+print(f"Maksymalna długość: {df["n_tokens"].max()}")
 
 # 3. Rozkład długości dokumentów
 
@@ -77,29 +78,26 @@ ttr = len(types) / len(word_tokens)
 freq = Counter(word_tokens)
 hapax = [w for w, c in freq.items() if c == 1]
 hap_len = len(hapax)
-print(hap_len, hap_len * 100 / len(unique), random.sample(hapax, 3))
+print(f"\nIlość hapax legomena: {hap_len}, skład procentowy: {hap_len * 100 / len(unique)}, przykładowe trzy: {random.sample(hapax, 3)}")
 
 # 6. Najczęstsze słowa
 
 top = Counter(word_tokens).most_common(20)
 word_tokens_nostop = [t for t in word_tokens if t not in stop_pl]
 top_without = Counter(word_tokens_nostop).most_common(20)
-s = f"{top[0]}"
-for i in range(1, 20):
-    s += f", {top[i]}"
-print(f"20 najczęstszych tokenów: {s}")
-s = f"{top_without[0]}"
-for i in range(1, 20):
-    s += f", {top_without[i]}"
-print(f"20 najczęstszych tokenów (bez stop words): {s}")
 
-# 7.
+print(f"\nNajczęstsze 20 słów:\n{'-' * 35}-+-{'-' * 35}")
+print(f"{"Ze stop words":<35} | Bez stop words\n{'-' * 35}-+-{'-' * 35}")
+for i in range(len(top)):
+    print(f"{top[i][0]:<15}{'#' * top[i][1]:<20} | {top_without[i][0]:<15}{'#' * top_without[i][1]:<20}")
+
+# 7. Statystyki na poziomie dokumentu
 
 df["ttr"] = df["tokens"].apply(lambda t: len(set(t)) / len(t) if len(t) > 0 else 0)
 df["avg_word_len"] = df["tokens"].apply(lambda l: sum(len(t) for t in l) / len(l) if len(l) > 0 else 0)
 df["stop_ratio"] = df["tokens"].apply(lambda l: sum(1 for t in l if t in stop_pl) * 100 / len(l) if len(l) > 0 else 0)
 
-print(df[["n_tokens", "ttr", "avg_word_len", "stop_ratio"]].describe())
+print(f"\nStatystyki na poziomie dokumentu:\n{df[["n_tokens", "ttr", "avg_word_len", "stop_ratio"]].describe()}")
 
 # 8. Wizualizacja: chmury słów
 
@@ -159,21 +157,29 @@ plt.show()
 # Bigramy — wszystkie
 bigrams = list(ngrams(word_tokens, 2))
 bigram_freq = Counter(bigrams)
-print(bigram_freq.most_common(15))
+print("\nBigramy:")
+for b in bigram_freq.most_common(15):
+    print(b)
 
 # Bigramy — bez stop words
 bigrams_filtered = list(ngrams(word_tokens_nostop, 2))
 bigram_freq_f = Counter(bigrams_filtered)
-print(bigram_freq_f.most_common(15))
+print("\nBigramy (bez stop words):")
+for b in bigram_freq_f.most_common(15):
+    print(b)
 
 # (Opcjonalnie) Trigramy
 trigrams = list(ngrams(word_tokens, 3))
 trigram_freq = Counter(bigrams)
-print(trigram_freq.most_common(15))
+print("\nTrigramy:")
+for t in trigram_freq.most_common(15):
+    print(t)
 
 trigrams_filtered = list(ngrams(word_tokens_nostop, 3))
 trigram_freq_f = Counter(trigrams_filtered)
-print(trigram_freq_f.most_common(15))
+print("\nTrigramy (bez stop words):")
+for t in trigram_freq_f.most_common(15):
+    print(t)
 
 # 11. Prawo Zipfa
 
@@ -199,11 +205,11 @@ plt.show()
 # Pokrycie top-N słów
 top100 = freq.most_common(100)
 coverage = sum(c for _, c in top100) / sum(freq.values())
-print(f"Top 100 słów pokrywa {coverage*100:.1f}% wszystkich tokenów")
+print(f"\nTop 100 słów pokrywa {coverage*100:.1f}% wszystkich tokenów")
 
 top1000 = freq.most_common(1000)
 coverage = sum(c for _, c in top1000) / sum(freq.values())
-print(f"Top 1000 słów pokrywa {coverage*100:.1f}% wszystkich tokenów")
+print(f"Top 1000 słów pokrywa {coverage*100:.1f}% wszystkich tokenów\n")
 
 # 12a. Porównanie zbiorów
 
@@ -227,7 +233,37 @@ print(f"{'-' * 26}-+-{'-' * 15}-+-{'-' * 15}")
 print(f"{"Średnia długość dokumentu:":<26} | {m1:<15} | {m2}")
 print(f"{"TTR korpusu:":<26} | {ttr:.5f}{' ' * 8} | {ttr_2:.5f}")
 print(f"{"Liczba hapax legomena":<26} | {hap_len:<15} | {hap_len_2}")
-print(f"Najczęstsze 10 słów (bez stop words):\n{'-' * 35}-+-{'-' * 35}")
+print(f"\nNajczęstsze 10 słów (bez stop words):\n{'-' * 35}-+-{'-' * 35}")
 print(f"{"Recenzje filmowe":<35} | Recenzje restauracji\n{'-' * 35}-+-{'-' * 35}")
 for i in range(len(top10_without)):
     print(f"{top10_without[i][0]:<15}{'#' * top10_without[i][1]:<20} | {top10_without_2[i][0]:<15}{'#' * top10_without_2[i][1]:<20}")
+
+# 12b. Analiza sentymentu — różnice słownikowe
+
+pos_20 = Counter([t for t in word_tokens_pos if t not in stop_pl]).most_common(20)
+neg_20 = Counter([t for t in word_tokens_neg if t not in stop_pl]).most_common(20)
+set_pos = set()
+set_neg = set()
+for i in range(20):
+    set_pos.add(pos_20[i][0])
+    set_neg.add(neg_20[i][0])
+s = ""
+for t in set_pos - set_neg:
+    s += f"{t}, "
+print(f"\nSłowa z top 20 słów z recenzji pozytywnych występujące tylko w nich: {s[:-2]}.")
+s = ""
+for t in set_neg - set_pos:
+    s += f"{t}, "
+print(f"\nSłowa z top 20 słów z recenzji negatywnych występujące tylko w nich: {s[:-2]}.")
+
+# 12c. Strefy Zipfa (Luhn)
+
+all = set(word_tokens)
+no_stop = set(word_tokens_nostop)
+stop = all - no_stop
+hap = set(hapax)
+no_stop_no_hap = no_stop - hap
+# print(f"\nGórna strefa: {stop}")
+# print(f"\nDolna strefa: {hap}")
+print(f"\nSłowa ze strefy środkowej: {no_stop_no_hap}")
+# print(f"\nWSZYSTKIE słowa: {all}")
