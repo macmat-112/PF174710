@@ -75,6 +75,7 @@ df_stats = pd.DataFrame({
 
 print("\nRANKING TERMOW (wg sredniego TF-IDF):")
 print(df_stats.to_string(index=False))
+# Termy z najwyższym średnim TF-IDF najlepiej odróżniają kategorie, np. mroczne, sledztwo, detektyw, zbrodni, ...
 
 cos_sim = cosine_similarity(X_tfidf)
 
@@ -99,6 +100,7 @@ for i in range(len(recenzje_ksiazek)):
 
 plt.tight_layout()
 plt.show()
+# Kryminały są bliżej siebie, jednak nie wygląda to tak samo dla fantasy.
 
 konfig = [
     {"ngram_range": (1,1), "max_features": None, "min_df": 1},
@@ -190,6 +192,7 @@ for i, og in enumerate(posty):
     print(f"\nD{i} [{kategorie_postow[i]:>11s}]: {og[:55]}...")
     for nazwa, waga in cechy:
         print(f"       {waga:.3f}  <<{nazwa}>>")
+# bigramy dodają nowe informacje, których nie było w top 5 dla unigramów.
 
 def znajdz_podobne(query, n=3):
     q_vec = p2_tfidf_vec.transform([query])
