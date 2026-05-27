@@ -1,12 +1,13 @@
-# 1. Dane i przetwarzanie wstępne
+# 1. Przygotowanie danych:
+# Wykorzystamy zbiór CBD z benchmarku KLEJ (który bazuje na PolEval 2019).
+# Zawiera on zbiory: treningowy i testowy, zatem będziemy musieli podzielić zbiór treningowy na dwie części, aby uzyskać zbiór walidacyjny.
+# Do EDA użyjemy treningowego zbioru danych i kolumn: tekst wpisu ("sentence") i ocena ("target").
+# Potem, wykonamy wstępne przetwarzanie tekstu:
+# - Pierwsza funkcja czyszcząca zdanie z "wartości śmieciowych" (url, html, @user) dla podejścia transformerowego i dalszego przetwarzania.
+# - Druga funkcja, która lematyzuje wyczyszczony tekst dla podejścia klasycznego.
+# Jako ostatnie, wydzielimy ze zbioru treningowego zbiór walidacyjny.
 
-# Tytuł: Analiza sentymentu polskich wpisów w celu wykrycia mowy nienawiści.
-# Autor: Maciej Matyjasek
-# Opis: Projekt realizuje analizę sentymentu polskich wpisów na Twitterze/X w celu wykrycia tzw. hate speech.
-#       Porównujemy podejście klasyczne (TF-IDF + SVM) z podejściem opartym na Transformerach (HerBERT).
-# Źródło danych: Zbiór Allegro KLEJ-CBD z Hugging Face Datasets, bazujący na zbiorze PolEval 2019 - publicznie 
-#                dostępny zbiór wpisów z Twittera/X z ocenami: 0 (non-harmful), 1 (harmful).
-
+# Import bibliotek
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -20,7 +21,7 @@ plt.rcParams["figure.figsize"] = (10, 6)
 sns.set_style("whitegrid")
 pd.set_option("display.max_colwidth", 200)
 
-# Wczytanie zbioru CBD z benchmarku KLEJ (który bazuje na PolEval 2019)
+# Wczytanie zbioru danych
 dataset = load_dataset("allegro/klej-cbd")
 
 # Podgląd struktury
@@ -35,7 +36,6 @@ print(f"{"-" * 30}+{"-" * 30}+{"-" * 30}")
 print(f"{"Liczba rekordów":<30}|{len(df_train):<30}|{len(df_test):<30}")
 print(f"{"Kolumny":<30}|{str(list(df_train.columns)):<30}|{str(list(df_test.columns)):<30}")
 
-# Do EDA użyjemy treningowego zbioru danych i kolumn: tekst wpisu ("sentence") i ocena ("target")
 # Wyświetlenie kolumn i pierwszych wartości po konwersji do DataFrame
 print(f"\nPodgląd kolumn i typów ze zbioru treningowego:\n{df_train.dtypes}")
 print(f"\nPierwsze wartości ze zbioru treningowego:\n{df_train.head(10)}")
@@ -52,7 +52,7 @@ plt.xticks(sorted(df_train["target"].unique()), ["Neutralny", "Obraźliwy"], rot
 plt.title("Binarny rozkład ocen wpisów")
 plt.legend()
 plt.tight_layout()
-plt.show()
+plt.savefig("dane_rozklad_ocen.png")
 
 # Długość wpisów
 df_train["text_length"] = df_train["sentence"].astype(str).apply(len)
@@ -74,7 +74,7 @@ axes[1].set_xlabel("Liczba znaków")
 axes[1].legend()
 
 plt.tight_layout()
-plt.show()
+plt.savefig("dane_dlugosc_plikow.png")
 
 print("\nStatystyki długości recenzji (słowa):")
 print(df_train.groupby("target")["word_count"].describe())

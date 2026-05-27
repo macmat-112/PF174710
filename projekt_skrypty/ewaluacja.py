@@ -1,5 +1,11 @@
 # 3. Ewaluacja i analiza wyników
+# Korzystając z danych z poprzednich plików:
+# - Porównamy ilościowo oba podejścia (klasyczne vs Transformer).
+# - Przeprowadzimy analizę błędów.
+# - Zidentyfikujemy typowe pomyłki modeli z przykładami.
+# - Sformułujemy wnioski.
 
+# Import bibliotek
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,6 +20,7 @@ from sklearn.metrics import (
     f1_score,
 )
 
+# Ustawienia wyświetlania
 plt.rcParams["figure.figsize"] = (10, 6)
 sns.set_style("whitegrid")
 
@@ -103,7 +110,7 @@ for bars in [bars1, bars2]:
         )
 
 plt.tight_layout()
-plt.show()
+plt.savefig("ewal_metryki_porownawczy.png")
 
 # Macierze pomyłek obok siebie
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
@@ -127,7 +134,7 @@ for idx, (name, y_pred, cmap) in enumerate([
     axes[idx].set_ylabel("Prawdziwa etykieta")
 
 plt.tight_layout()
-plt.show()
+plt.savefig("ewal_macierze_pomylek.png")
 
 # Szczegółowe raporty klasyfikacji
 print(f"{'='*60}")
@@ -176,7 +183,7 @@ ax.set_title("Kategorie błędów – porównanie modeli")
 ax.set_ylabel("Liczba próbek")
 ax.set_xticklabels(ax.get_xticklabels(), rotation=30, ha="right")
 plt.tight_layout()
-plt.show()
+plt.savefig("ewal_kat_bledow.png")
 
 # Przykłady błędnych predykcji – podejście klasyczne
 print("PRZYKŁADY BŁĘDNYCH PREDYKCJI – Podejście klasyczne")
@@ -252,7 +259,7 @@ ax.set_ylim(0, 1.05)
 ax.legend([summary["classic_name"], "HerBERT"])
 ax.set_xticklabels(ax.get_xticklabels(), rotation=0)
 plt.tight_layout()
-plt.show()
+plt.savefig("ewal_accuracy.png")
 
 # Przypadki gdzie Transformer jest lepszy od klasycznego
 print("PRZEWAGA TRANSFORMERA – poprawny Transformer, błędny klasyczny")
@@ -300,3 +307,36 @@ diff_acc = summary['transformer_accuracy'] - summary['classic_accuracy']
 diff_f1 = summary['transformer_f1'] - summary['classic_f1']
 print(f"{'Różnica (T - K)':<30} {diff_acc:>+10.4f} {diff_f1:>+10.4f}")
 
+# Wnioski końcowe:
+
+# Wyniki obydwu modeli znacznie się polepszyły po zastosowaniu wag.
+# Zwykle takie działanie zwiększa liczbę False Positives, jednak w naszym przypadku,
+# zgrubsza lepiej jest, gdy jest więcej fałszywych alarmów, niż gdy model przepuści więcej hejtu.
+# Mimo wszystko, liczba False Positives zwiększyła się nieznacznie.
+
+# Podejście klasyczne (TF-IDF + SVM/NB):
+# - Szybki trening i inferencja.
+# - Nie wymaga GPU.
+# - Dobrze radzi sobie z tweetami zawierającymi wyraźne słowa kluczowe.
+# - Problemy z ironią, sarkazmem, negacjami.
+
+# Podejście Transformer (HerBERT):
+# - Lepsze rozumienie kontekstu i niuansów językowych.
+# - Wymaga GPU i więcej pamięci.
+# - Dłuższy czas treningu.
+# - Lepsze wyniki na trudnych przypadkach.
+
+# Typowe błędy modeli:
+# - Wpisy mieszane, np. zawierające elementy wulgarne, ale niebędące hejtem.
+# - Ironia i sarkazm.
+# - Krótkie, mało informacyjne tweety.
+# - Wpisy z wieloma negacjami.
+# - Tweety zawierające słowa spoza słownika, np. obelgi występujące tylko na stronach właśnie tego pokroju.
+# - Używanie słów niewulgarnych w celach obraźliwych.
+
+# Możliwe ulepszenia:
+# - Więcej epok treningu dla Transformera.
+# - Augmentacja danych.
+# - Ensemble obu podejść.
+# - Użycie większego modelu (np. Polish RoBERTa).
+# - Zbalansowanie zbioru danych.

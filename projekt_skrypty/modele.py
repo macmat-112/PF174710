@@ -1,5 +1,11 @@
-# 2. Implementacja modeli
+# 2. Implementacja modeli:
+# Użyjemy danych z poprzedniego pliku (dane.py).
+# Zaimplementujemy dwa podejścia analizy sentymentu:
+# - Podejście klasyczne: TF-IDF + Naive Bayes / Linear SVC / Logistic Regression.
+# Jako że nasze zbiory są niezbalansowane, sprawdzimy także wyniki dla SVM i LR z zaaplikowanymi wagami.
+# - Podejście Transformer: Fine-tuning modelu HerBERT (polski BERT), także z dodanymi wagami: 1 - neutralny, 10 - obraźliwy.
 
+# Import bibliotek
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,6 +32,7 @@ from transformers import get_linear_schedule_with_warmup
 
 from torch.nn import CrossEntropyLoss
 
+# Ustawienia wyświetlania
 warnings.filterwarnings("ignore")
 plt.rcParams["figure.figsize"] = (10, 6)
 
@@ -65,8 +72,8 @@ classifiers = {
     "SVM (LinearSVC)": LinearSVC(max_iter=5000, random_state=42),
     "Naive Bayes": MultinomialNB(alpha=0.1),
     "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42),
-    "SVM (LinearSVC) weighted": LinearSVC(max_iter=5000, random_state=42, class_weight="balanced"),
-    "Logistic Regression weighted": LogisticRegression(max_iter=1000, random_state=42, class_weight="balanced"),
+    "SVM (LinearSVC) weighted": LinearSVC(max_iter=5000, random_state=42, class_weight="balanced"), # przetestujemy też ten sam model, ale z dodaną wagą dla kategorii
+    "Logistic Regression weighted": LogisticRegression(max_iter=1000, random_state=42, class_weight="balanced"), # to, co wyżej
 }
 
 classic_results = {}
@@ -140,7 +147,7 @@ plt.title(f"Macierz pomyłek – {best_classic_name}")
 plt.xlabel("Predykcja")
 plt.ylabel("Prawdziwa etykieta")
 plt.tight_layout()
-plt.show()
+plt.savefig("modele_pomylki_klasyczne.png")
 
 # Sprawdzenie GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -234,7 +241,6 @@ def train_epoch(model, loader, optimizer, scheduler, device):
         labels = batch["label"].to(device)
 
         optimizer.zero_grad()
-        #outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
 
         # Chcemy zdefiniować wagi (hejt jest 10x ważniejszy) i wysłać na GPU
         outputs = model(input_ids=input_ids, attention_mask=attention_mask)
@@ -244,7 +250,6 @@ def train_epoch(model, loader, optimizer, scheduler, device):
 
         # Obliczamy loss ręcznie na podstawie logitów i prawdziwych etykiet
         loss = loss_fct(outputs.logits, labels)
-        #loss = outputs.loss
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
@@ -325,7 +330,7 @@ axes[1].set_ylabel("Accuracy")
 axes[1].legend()
 
 plt.tight_layout()
-plt.show()
+plt.savefig("modele_wykresy_treningu.png")
 
 # Ewaluacja HerBERT na zbiorze testowym
 test_loss, test_acc, test_f1, y_test_pred_transformer, y_test_true = evaluate(
@@ -359,7 +364,7 @@ plt.title("Macierz pomyłek – HerBERT")
 plt.xlabel("Predykcja")
 plt.ylabel("Prawdziwa etykieta")
 plt.tight_layout()
-plt.show()
+plt.savefig("modele_pomylki_transformer.png")
 
 # Zapis predykcji do pliku (do analizy w Notebooku 3)
 results_df = df_test.copy()

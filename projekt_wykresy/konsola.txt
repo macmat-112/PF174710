@@ -1,0 +1,402 @@
+Ten plik tekstowy zawiera outputy z konsoli z plików ze skryptami projektu.
+
+1. dane.py
+
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+Struktura zbioru danych:
+DatasetDict({
+    train: Dataset({
+        features: ['sentence', 'target'],
+        num_rows: 10041
+    })
+    test: Dataset({
+        features: ['sentence', 'target'],
+        num_rows: 1000
+    })
+})
+
+Informacje o zbiorach po konwersji do DataFrame:
+                              |train                         |test                          
+------------------------------+------------------------------+------------------------------
+Liczba rekordów               |10041                         |1000                          
+Kolumny                       |['sentence', 'target']        |['sentence', 'target']        
+
+Podgląd kolumn i typów ze zbioru treningowego:
+sentence      str
+target      int64
+dtype: object
+
+Pierwsze wartości ze zbioru treningowego:
+                                                                                                                                                     sentence  target
+0                                                                              Dla mnie faworytem do tytułu będzie Cracovia. Zobaczymy, czy typ się sprawdzi.       0
+1                                                                          @anonymized_account @anonymized_account Brawo ty Daria kibic ma być na dobre i złe       0
+2                               @anonymized_account @anonymized_account Super, polski premier składa kwiaty na grobach kolaborantów. Ale doczekaliśmy czasów.       0
+3                                                                                         @anonymized_account @anonymized_account Musi. Innej drogi nie mamy.       0
+4                                                                                                             Odrzut natychmiastowy, kwaśna mina, mam problem       0
+5                         Jaki on był fajny xdd pamiętam, że spóźniłam się na jego pierwsze zajęcia i to sporo i za karę kazał mi usiąść w pierwszej ławce XD       0
+6                                                                                                             @anonymized_account No nie ma u nas szczęścia 😉       0
+7                                                                                               @anonymized_account Dawno kogoś tak wrednego nie widziałam xd       0
+8                            @anonymized_account @anonymized_account Zaległości były, ale ważne czy były wezwania do zapłaty z których się klub nie wywiązał.       0
+9  @anonymized_account @anonymized_account @anonymized_account Gdzie jest @anonymized_account . Brudziński jesteś kłamcą i marnym kutasem @anonymized_account       1
+
+Rozkład ocen:
+target
+0    9190
+1     851
+Name: count, dtype: int64
+
+Statystyki długości recenzji (słowa):
+         count       mean       std  min  25%   50%   75%   max
+target                                                         
+0       9190.0  12.327095  4.761852  1.0  8.0  12.0  16.0  29.0
+1        851.0  12.857814  4.228446  5.0  9.0  13.0  16.0  25.0
+
+Oryginał: Dla mnie faworytem do tytułu będzie Cracovia. Zobaczymy, czy typ się sprawdzi.
+Po przetworzeniu: faworyt tytuł cracovia zobaczyć typ sprawdzić
+Czyszczenie tekstu...
+Przetwarzanie tekstu...
+Rekordów po przetworzeniu: 11041
+
+Rozmiary zbiorów:
+  Treningowy: 9041
+  Walidacyjny: 1000
+  Testowy: 1000
+
+Rozkład ocen wpisów w zbiorze treningowym:
+target
+0    0.915275
+1    0.084725
+Name: proportion, dtype: float64
+
+Dane zapisane do plików: train.csv, test.csv
+Kolumny w pliku:
+  'sentence' - oryginalny tekst
+  'text_clean' - wyczyszczony tekst (dla podejścia opartego na Transformerach)
+  'text_processed' - przetworzony tekst (dla podejścia klasycznego)
+  'target' - etykieta (0=neutralny, 1=obraźliwy)
+
+
+
+
+
+2. modele.py
+
+Train: 9041, Val: 1000, Test: 1000
+Wymiary macierzy TF-IDF (train): (9041, 10000)
+Liczba cech (unikalne n-gramy): 10000
+
+==================================================
+Trening: SVM (LinearSVC)
+==================================================
+Accuracy (val): 0.9370
+F1-score (val): 0.7352
+
+Raport klasyfikacji (val):
+              precision    recall  f1-score   support
+
+   Neutralny       0.94      0.99      0.97       915
+   Obraźliwy       0.76      0.38      0.50        85
+
+    accuracy                           0.94      1000
+   macro avg       0.85      0.68      0.74      1000
+weighted avg       0.93      0.94      0.93      1000
+
+
+==================================================
+Trening: Naive Bayes
+==================================================
+Accuracy (val): 0.9260
+F1-score (val): 0.6500
+
+Raport klasyfikacji (val):
+              precision    recall  f1-score   support
+
+   Neutralny       0.93      0.99      0.96       915
+   Obraźliwy       0.70      0.22      0.34        85
+
+    accuracy                           0.93      1000
+   macro avg       0.82      0.61      0.65      1000
+weighted avg       0.91      0.93      0.91      1000
+
+
+==================================================
+Trening: Logistic Regression
+==================================================
+Accuracy (val): 0.9170
+F1-score (val): 0.5120
+
+Raport klasyfikacji (val):
+              precision    recall  f1-score   support
+
+   Neutralny       0.92      1.00      0.96       915
+   Obraźliwy       0.75      0.04      0.07        85
+
+    accuracy                           0.92      1000
+   macro avg       0.83      0.52      0.51      1000
+weighted avg       0.90      0.92      0.88      1000
+
+
+==================================================
+Trening: SVM (LinearSVC) weighted
+==================================================
+Accuracy (val): 0.9090
+F1-score (val): 0.7391
+
+Raport klasyfikacji (val):
+              precision    recall  f1-score   support
+
+   Neutralny       0.96      0.94      0.95       915
+   Obraźliwy       0.47      0.60      0.53        85
+
+    accuracy                           0.91      1000
+   macro avg       0.72      0.77      0.74      1000
+weighted avg       0.92      0.91      0.91      1000
+
+
+==================================================
+Trening: Logistic Regression weighted
+==================================================
+Accuracy (val): 0.8920
+F1-score (val): 0.7174
+
+Raport klasyfikacji (val):
+              precision    recall  f1-score   support
+
+   Neutralny       0.96      0.92      0.94       915
+   Obraźliwy       0.41      0.62      0.50        85
+
+    accuracy                           0.89      1000
+   macro avg       0.69      0.77      0.72      1000
+weighted avg       0.92      0.89      0.90      1000
+
+Najlepszy klasyfikator klasyczny: SVM (LinearSVC) weighted
+F1-score (val): 0.7391
+
+Wyniki na zbiorze testowym (SVM (LinearSVC) weighted):
+Accuracy: 0.8460
+F1-score: 0.6301
+
+Raport klasyfikacji (test):
+              precision    recall  f1-score   support
+
+   Neutralny       0.90      0.93      0.91       866
+   Obraźliwy       0.40      0.31      0.35       134
+
+    accuracy                           0.85      1000
+   macro avg       0.65      0.62      0.63      1000
+weighted avg       0.83      0.85      0.84      1000
+
+Urządzenie: cuda
+GPU: NVIDIA GeForce RTX 3070
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 199/199 [00:00<00:00, 5807.55it/s]
+[transformers] BertForSequenceClassification LOAD REPORT from: allegro/herbert-base-cased
+Key                                        | Status     | 
+-------------------------------------------+------------+-
+cls.predictions.transform.dense.weight     | UNEXPECTED | 
+cls.predictions.transform.LayerNorm.weight | UNEXPECTED | 
+cls.predictions.decoder.bias               | UNEXPECTED | 
+cls.sso.sso_relationship.bias              | UNEXPECTED | 
+cls.predictions.transform.dense.bias       | UNEXPECTED | 
+cls.predictions.bias                       | UNEXPECTED | 
+cls.sso.sso_relationship.weight            | UNEXPECTED | 
+cls.predictions.decoder.weight             | UNEXPECTED | 
+cls.predictions.transform.LayerNorm.bias   | UNEXPECTED | 
+classifier.weight                          | MISSING    | 
+classifier.bias                            | MISSING    | 
+
+Notes:
+- UNEXPECTED:   can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:      those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+Model: allegro/herbert-base-cased
+Parametry: 124,444,418
+Batche treningowe: 566
+Batche walidacyjne: 63
+Rozpoczynam trening HerBERT (3 epok)...
+
+Epoka 1/3 | Train Loss: 0.5600 | Train Acc: 0.8156 | Val Loss: 0.2529 | Val Acc: 0.8980 | Val F1: 0.7287
+Epoka 2/3 | Train Loss: 0.4233 | Train Acc: 0.9272 | Val Loss: 0.2884 | Val Acc: 0.8990 | Val F1: 0.7368
+Epoka 3/3 | Train Loss: 0.3032 | Train Acc: 0.9621 | Val Loss: 0.3368 | Val Acc: 0.9200 | Val F1: 0.7508
+Wyniki HerBERT na zbiorze testowym:
+Accuracy: 0.9080
+F1-score: 0.7723
+
+Raport klasyfikacji:
+              precision    recall  f1-score   support
+
+   Neutralny       0.93      0.97      0.95       866
+   Obraźliwy       0.72      0.51      0.60       134
+
+    accuracy                           0.91      1000
+   macro avg       0.83      0.74      0.77      1000
+weighted avg       0.90      0.91      0.90      1000
+
+Predykcje zapisane do: test_predictions.csv
+Podsumowanie wyników zapisane do: results_summary.pkl
+
+3. ewaluacja.py
+
+Liczba próbek testowych: 1000
+Podejście klasyczne: SVM (LinearSVC) weighted
+Podejście Transformer: HerBERT
+Porównanie metryk na zbiorze testowym:
+============================================================
+                          Accuracy  Precision  Recall  F1-score
+Model                                                          
+SVM (LinearSVC) weighted     0.846     0.6492  0.6178    0.6301
+HerBERT (Transformer)        0.908     0.8253  0.7387    0.7723
+============================================================
+============================================================
+Raport klasyfikacji – SVM (LinearSVC) weighted
+============================================================
+              precision    recall  f1-score   support
+
+   Neutralny       0.90      0.93      0.91       866
+   Obraźliwy       0.40      0.31      0.35       134
+
+    accuracy                           0.85      1000
+   macro avg       0.65      0.62      0.63      1000
+weighted avg       0.83      0.85      0.84      1000
+
+
+============================================================
+Raport klasyfikacji – HerBERT
+============================================================
+              precision    recall  f1-score   support
+
+   Neutralny       0.93      0.97      0.95       866
+   Obraźliwy       0.72      0.51      0.60       134
+
+    accuracy                           0.91      1000
+   macro avg       0.83      0.74      0.77      1000
+weighted avg       0.90      0.91      0.90      1000
+
+Kategorie błędów:
+error_type
+oba poprawne                819
+tylko klasyczny błędny       89
+oba błędne                   65
+tylko transformer błędny     27
+Name: count, dtype: int64
+
+Procent zgodności obu modeli: 81.9%
+PRZYKŁADY BŁĘDNYCH PREDYKCJI – Podejście klasyczne
+======================================================================
+
+Tekst: @anonymized_account @anonymized_account Kto mieczem wojuje, ten od pochwy ginie...
+  Prawda: Neutralny | Predykcja: Obraźliwy
+----------------------------------------------------------------------
+
+Tekst: @anonymized_account @anonymized_account @anonymized_account W takim razie sie zapedzilem, i tak nie daje banów, nawet botom...
+  Prawda: Neutralny | Predykcja: Obraźliwy
+----------------------------------------------------------------------
+
+Tekst: @anonymized_account Dokładnie, pisdzielstwo nie ma prawa rozpierdalać systemu,  sądownictwa nie mając większości...
+  Prawda: Obraźliwy | Predykcja: Neutralny
+----------------------------------------------------------------------
+
+Tekst: @anonymized_account Nieprawda. Normalnie tak się nie \"tnie\"....
+  Prawda: Neutralny | Predykcja: Obraźliwy
+----------------------------------------------------------------------
+
+Tekst: @anonymized_account Widać ludziom w Sączu tak pasuje. Ja bym mu w gębę napluł...
+  Prawda: Obraźliwy | Predykcja: Neutralny
+----------------------------------------------------------------------
+PRZYKŁADY BŁĘDNYCH PREDYKCJI – HerBERT (Transformer)
+======================================================================
+
+Tekst: @anonymized_account @anonymized_account Kto mieczem wojuje, ten od pochwy ginie...
+  Prawda: Neutralny | Predykcja: Obraźliwy
+----------------------------------------------------------------------
+
+Tekst: @anonymized_account Tej szmaty się nie komentuje...
+  Prawda: Obraźliwy | Predykcja: Neutralny
+----------------------------------------------------------------------
+
+Tekst: @anonymized_account powinnaś odpowiedzieć za działanie na szkodę Polski i obywateli...
+  Prawda: Obraźliwy | Predykcja: Neutralny
+----------------------------------------------------------------------
+
+Tekst: RT @anonymized_account @anonymized_account powinnaś odpowiedzieć za działanie na szkodę Polski i obywateli...
+  Prawda: Obraźliwy | Predykcja: Neutralny
+----------------------------------------------------------------------
+
+Tekst: @anonymized_account   Półgłówek Wieliński, wymyślił sobie półautorytaryzm!...
+  Prawda: Obraźliwy | Predykcja: Neutralny
+----------------------------------------------------------------------
+NAJTRUDNIEJSZE PRZYPADKI – oba modele błędne
+======================================================================
+
+Tekst: @anonymized_account @anonymized_account Kto mieczem wojuje, ten od pochwy ginie...
+  Prawdziwa etykieta: Neutralny
+----------------------------------------------------------------------
+
+Tekst: @anonymized_account powinnaś odpowiedzieć za działanie na szkodę Polski i obywateli...
+  Prawdziwa etykieta: Obraźliwy
+----------------------------------------------------------------------
+
+Tekst: RT @anonymized_account @anonymized_account powinnaś odpowiedzieć za działanie na szkodę Polski i obywateli...
+  Prawdziwa etykieta: Obraźliwy
+----------------------------------------------------------------------
+
+Tekst: @anonymized_account   Półgłówek Wieliński, wymyślił sobie półautorytaryzm!...
+  Prawdziwa etykieta: Obraźliwy
+----------------------------------------------------------------------
+
+Tekst: RT @anonymized_account @anonymized_account   Półgłówek Wieliński, wymyślił sobie półautorytaryzm!...
+  Prawdziwa etykieta: Obraźliwy
+----------------------------------------------------------------------
+Accuracy wg długości tekstu (słowa):
+            classic_acc  transformer_acc  count
+length_bin                                     
+1-10             0.8392           0.8998    429
+11-25            0.8501           0.9136    567
+26-50            1.0000           1.0000      4
+51-100              NaN              NaN      0
+100+                NaN              NaN      0
+PRZEWAGA TRANSFORMERA – poprawny Transformer, błędny klasyczny
+======================================================================
+
+Tekst: @anonymized_account @anonymized_account @anonymized_account W takim razie sie zapedzilem, i tak nie daje banów, nawet botom...
+  Prawda: Neutralny
+----------------------------------------------------------------------
+
+Tekst: @anonymized_account Dokładnie, pisdzielstwo nie ma prawa rozpierdalać systemu,  sądownictwa nie mając większości...
+  Prawda: Obraźliwy
+----------------------------------------------------------------------
+
+Tekst: @anonymized_account Nieprawda. Normalnie tak się nie \"tnie\"....
+  Prawda: Neutralny
+----------------------------------------------------------------------
+
+
+PRZEWAGA KLASYCZNEGO – poprawny klasyczny, błędny Transformer
+======================================================================
+
+Tekst: @anonymized_account Tej szmaty się nie komentuje...
+  Prawda: Obraźliwy
+----------------------------------------------------------------------
+
+Tekst: @anonymized_account ostatnio pewnie chciałeś usłyszeć od Pazdana jacy to kibice Wisły źli a tu dupa...
+  Prawda: Neutralny
+----------------------------------------------------------------------
+
+Tekst: Jestem do tylu ale czy Ari zerwała z tym ćpunem?...
+  Prawda: Neutralny
+----------------------------------------------------------------------
+
+============================================================
+PODSUMOWANIE PROJEKTU
+============================================================
+
+Zadanie: Analiza sentymentu polskich recenzji produktów (Allegro)
+Zbiór danych: allegro-reviews (Hugging Face Datasets)
+Próbki testowe: 1000
+
+Model                            Accuracy   F1-score
+----------------------------------------------------
+SVM (LinearSVC) weighted           0.8460     0.6301
+HerBERT (Transformer)              0.9080     0.7723
+----------------------------------------------------
+Różnica (T - K)                   +0.0620    +0.1422
